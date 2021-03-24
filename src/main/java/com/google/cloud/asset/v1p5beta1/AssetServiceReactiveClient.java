@@ -1,12 +1,17 @@
 package com.google.cloud.asset.v1p5beta1;
 
+import com.google.api.core.ApiFuture;
+import com.google.api.core.ApiFutureCallback;
+import com.google.api.core.ApiFutures;
 import com.google.api.core.BetaApi;
 import com.google.api.gax.core.BackgroundResource;
 import com.google.api.gax.rpc.UnaryCallable;
+import com.google.cloud.asset.v1p5beta1.AssetServiceClient.ListAssetsPagedResponse;
 import com.google.cloud.asset.v1p5beta1.stub.AssetServiceStub;
 import com.google.cloud.asset.v1p5beta1.stub.AssetServiceStubSettings;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
+import reactor.core.publisher.Flux;
 
 public class AssetServiceReactiveClient implements BackgroundResource {
 
@@ -46,8 +51,23 @@ public class AssetServiceReactiveClient implements BackgroundResource {
     return this.stub;
   }
 
-  public final AssetServiceClient.ListAssetsPagedResponse listAssets(ListAssetsRequest request) {
-    return (AssetServiceClient.ListAssetsPagedResponse)this.listAssetsPagedCallable().call(request);
+  public final Flux<Asset> listAssets(ListAssetsRequest request) {
+    return Flux.create(sink -> {
+      final ApiFuture<ListAssetsPagedResponse> futureResponse = this.listAssetsPagedCallable().futureCall(request);
+      sink.onCancel(() -> futureResponse.cancel(true));
+      ApiFutures.addCallback(futureResponse, new ApiFutureCallback<ListAssetsPagedResponse>() {
+        public void onFailure(Throwable throwable) {
+          sink.error(throwable);
+        }
+
+        public void onSuccess(ListAssetsPagedResponse listAssetsPagedResponse) {
+          for (Asset a : listAssetsPagedResponse.iterateAll()) {
+            sink.next(a);
+          }
+          sink.complete();
+        }
+      }, this.settings.getExecutorProvider().getExecutor());
+    });
   }
 
   public final UnaryCallable<ListAssetsRequest, AssetServiceClient.ListAssetsPagedResponse> listAssetsPagedCallable() {
