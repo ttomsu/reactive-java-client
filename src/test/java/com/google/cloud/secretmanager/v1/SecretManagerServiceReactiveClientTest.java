@@ -38,9 +38,10 @@ public class SecretManagerServiceReactiveClientTest {
     assertThat(result).isEqualTo(secretValue);
 
     SecretName sn = SecretName.of(projectId, secretID);
-    this.reactiveClient.deleteSecret(sn.toString())
+    Secret s = this.reactiveClient.deleteSecret(sn.toString())
         .flatMap(unused -> this.reactiveClient.getSecret(sn.toString()))
-        .onErrorContinue((throwable, o) -> assertThat(o).isNull())
+        .onErrorStop()
         .block();
+    assertThat(s).isNull();
   }
 }

@@ -1,6 +1,7 @@
 package com.google.cloud.secretmanager.v1;
 
 import static com.google.cloud.reactive.util.Converters.toMono;
+import static com.google.cloud.reactive.util.Converters.toMonoVoid;
 
 import com.google.api.core.BetaApi;
 import com.google.api.gax.core.BackgroundResource;
@@ -10,6 +11,7 @@ import com.google.cloud.secretmanager.v1.stub.SecretManagerServiceStubSettings;
 import com.google.protobuf.Empty;
 import com.google.protobuf.FieldMask;
 import java.io.IOException;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import reactor.core.publisher.Mono;
 
@@ -17,6 +19,7 @@ public class SecretManagerServiceReactiveClient implements BackgroundResource {
 
   private final SecretManagerServiceSettings settings;
   private final SecretManagerServiceStub stub;
+  private final ScheduledExecutorService executorService;
 
   public static final SecretManagerServiceReactiveClient create() throws IOException {
     return create(SecretManagerServiceSettings.newBuilder().build());
@@ -33,12 +36,14 @@ public class SecretManagerServiceReactiveClient implements BackgroundResource {
 
   protected SecretManagerServiceReactiveClient(SecretManagerServiceSettings settings) throws IOException {
     this.settings = settings;
+    this.executorService = settings.getExecutorProvider().getExecutor();
     this.stub = ((SecretManagerServiceStubSettings)settings.getStubSettings()).createStub();
   }
 
   @BetaApi("A restructuring of stub classes is planned, so this may break in the future")
   protected SecretManagerServiceReactiveClient(SecretManagerServiceStub stub) {
     this.settings = null;
+    this.executorService = null;
     this.stub = stub;
   }
 
@@ -63,7 +68,7 @@ public class SecretManagerServiceReactiveClient implements BackgroundResource {
     return createSecret(request);
   }
   public final Mono<Secret> createSecret(CreateSecretRequest request) {
-    return toMono(() -> createSecretCallable().futureCall(request), this.settings);
+    return toMono(() -> createSecretCallable().futureCall(request), this.executorService);
   }
 
   public final UnaryCallable<CreateSecretRequest, Secret> createSecretCallable() {
@@ -76,7 +81,7 @@ public class SecretManagerServiceReactiveClient implements BackgroundResource {
   }
 
   public final Mono<Secret> getSecret(GetSecretRequest request) {
-    return toMono(() -> this.getSecretCallable().futureCall(request), this.settings);
+    return toMono(() -> this.getSecretCallable().futureCall(request), this.executorService);
   }
 
   public final UnaryCallable<GetSecretRequest, Secret> getSecretCallable() {
@@ -90,20 +95,20 @@ public class SecretManagerServiceReactiveClient implements BackgroundResource {
   }
 
   public final Mono<Secret> updateSecret(UpdateSecretRequest request) {
-    return toMono(() -> this.updateSecretCallable().futureCall(request), this.settings);
+    return toMono(() -> this.updateSecretCallable().futureCall(request), this.executorService);
   }
 
   public final UnaryCallable<UpdateSecretRequest, Secret> updateSecretCallable() {
     return stub.updateSecretCallable();
   }
 
-  public final Mono<Empty> deleteSecret(String name) {
+  public final Mono<Void> deleteSecret(String name) {
     DeleteSecretRequest request = DeleteSecretRequest.newBuilder().setName(name).build();
     return deleteSecret(request);
   }
 
-  public final Mono<Empty> deleteSecret(DeleteSecretRequest request) {
-    return toMono(() -> deleteSecretCallable().futureCall(request), this.settings);
+  public final Mono<Void> deleteSecret(DeleteSecretRequest request) {
+    return toMonoVoid(() -> deleteSecretCallable().futureCall(request), this.executorService);
   }
 
   public final UnaryCallable<DeleteSecretRequest, Empty> deleteSecretCallable() {
@@ -125,7 +130,7 @@ public class SecretManagerServiceReactiveClient implements BackgroundResource {
   }
 
   public final Mono<AccessSecretVersionResponse> accessSecretVersion(AccessSecretVersionRequest request) {
-    return toMono(() -> accessSecretVersionCallable().futureCall(request), this.settings);
+    return toMono(() -> accessSecretVersionCallable().futureCall(request), this.executorService);
   }
 
   public final UnaryCallable<AccessSecretVersionRequest, AccessSecretVersionResponse>
@@ -149,7 +154,7 @@ public class SecretManagerServiceReactiveClient implements BackgroundResource {
   }
 
   public final Mono<SecretVersion> addSecretVersion(AddSecretVersionRequest request) {
-    return toMono(() -> addSecretVersionCallable().futureCall(request), this.settings);
+    return toMono(() -> addSecretVersionCallable().futureCall(request), this.executorService);
   }
 
   public final UnaryCallable<AddSecretVersionRequest, SecretVersion> addSecretVersionCallable() {

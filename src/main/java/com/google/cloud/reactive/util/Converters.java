@@ -5,14 +5,14 @@ import com.google.api.core.ApiFutureCallback;
 import com.google.api.core.ApiFutures;
 import com.google.api.gax.paging.Page;
 import com.google.api.gax.paging.PagedListResponse;
-import com.google.api.gax.rpc.ClientSettings;
 import com.google.protobuf.Empty;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Supplier;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class Converters {
-  public static <T> Mono<T> toMono(Supplier<ApiFuture<T>> supplier, ClientSettings<?> settings) {
+  public static <T> Mono<T> toMono(Supplier<ApiFuture<T>> supplier, ScheduledExecutorService executorService) {
     return Mono.create(sink -> {
       ApiFuture<T> f = supplier.get();
       sink.onCancel(() -> f.cancel(true));
@@ -26,15 +26,15 @@ public class Converters {
         public void onSuccess(T result) {
           sink.success(result);
         }
-      }, settings.getExecutorProvider().getExecutor());
+      }, executorService);
     });
   }
 
-  // public static Mono<Empty> toMonoEmpty(Supplier<ApiFuture<Empty>> supplier, ClientSettings<?> settings) {
-  //   return toMono(supplier, settings).map(empty -> Mono.empty());
-  // }
+  public static Mono<Void> toMonoVoid(Supplier<ApiFuture<Empty>> supplier, ScheduledExecutorService executorService) {
+    return toMono(supplier, executorService).flatMap(empty -> Mono.empty());
+  }
 
-  public static <T, R extends PagedListResponse<T>> Flux<Page<T>> toPagesFlux(Supplier<ApiFuture<R>> supplier, ClientSettings<?> settings) {
+  public static <T, R extends PagedListResponse<T>> Flux<Page<T>> toPagesFlux(Supplier<ApiFuture<R>> supplier, ScheduledExecutorService executorService) {
     return Flux.create(sink -> {
       ApiFuture<R> f = supplier.get();
       sink.onCancel(() -> f.cancel(true));
@@ -51,11 +51,11 @@ public class Converters {
           }
           sink.complete();
         }
-      }, settings.getExecutorProvider().getExecutor());
+      }, executorService);
     });
   }
 
-  public static <T, R extends PagedListResponse<T>> Flux<T> toItemsFlux(Supplier<ApiFuture<R>> supplier, ClientSettings<?> settings) {
+  public static <T, R extends PagedListResponse<T>> Flux<T> toItemsFlux(Supplier<ApiFuture<R>> supplier, ScheduledExecutorService executorService) {
     return Flux.create(sink -> {
       ApiFuture<R> f = supplier.get();
       sink.onCancel(() -> f.cancel(true));
@@ -72,7 +72,7 @@ public class Converters {
           }
           sink.complete();
         }
-      }, settings.getExecutorProvider().getExecutor());
+      }, executorService);
     });
   }
 }
