@@ -41,14 +41,8 @@ public class LoggingReactiveClientTest {
         .take(40)
         .subscribe();
 
-    Flux<List<String>> resourceFlux = Flux.interval(Duration.ofSeconds(0), Duration.ofSeconds(10))
-        .zipWith(Flux.just(
-            Collections.singletonList(ProjectName.of(projectId).toString()),
-            new ArrayList<String>() {{
-                add(ProjectName.of(projectId).toString());
-                add("testing=false");
-            }}), (i, list) -> list)
-        .take(2);
+    Flux<List<String>> resourceFlux = Flux.just(
+        Collections.singletonList(ProjectName.of(projectId).toString()));
     LogEntry lastEntry = this.reactiveClient
         .tailLogEntries(resourceFlux)
         .log()
